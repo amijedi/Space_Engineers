@@ -1,0 +1,63 @@
+public Program()
+{
+    Runtime.UpdateFrequency = UpdateFrequency.Update100;
+}
+
+public void Save()
+{
+}
+
+public void Main(string argument, UpdateType updateSource)
+{
+
+        int countThrust = 0;
+        float MaxEffectiveThrust = 0;
+        float MassShip;
+        float Kh = 101.97F; //kg
+        string str;
+        double[] g = new double[6] {0.9, 1, 1.1, 1.2, 2, 4};
+        string[] planet = new string[6] {"Марс", "Земля", "Алиен", "Пертам", "Тохил", "Райк"};
+        string status;
+
+        //Получаем кокпит
+        List<IMyCockpit> Cockpit = new List<IMyCockpit>();
+        GridTerminalSystem.GetBlocksOfType<IMyCockpit>(Cockpit);
+
+        //Получаем все двигатели
+        List<IMyThrust> Thrusters = new List<IMyThrust>();
+        GridTerminalSystem.GetBlocksOfType<IMyThrust>(Thrusters);
+
+        IMyTextSurface LCD_1 = GridTerminalSystem.GetBlockWithName("LCD1") as IMyTextSurface;
+
+        foreach (IMyThrust Thrust in Thrusters)
+        {
+            if (Thrust.Orientation.Forward == Base6Directions.Direction.Right)
+            {
+                //Echo(Thrust.Orientation.Forward.ToString());
+                //Количество двигателей на подъем
+                countThrust += 1;
+                //Общая мощность в КилоНьютонах
+                MaxEffectiveThrust += Thrust.MaxEffectiveThrust / 1000;
+
+            }
+        }
+        MassShip = Cockpit[0].CalculateShipMass().PhysicalMass / 1000;
+        //Количество двигателей на подъем
+        str = $"Кол. двигателей: {countThrust}\n";
+        //Масса корабля в тоннах
+        str += $"Масса: {(Cockpit[0].CalculateShipMass().PhysicalMass / 1000):#0 000.0#}\n";
+
+        for(int i = 0; i< 6; i++)
+        {
+            if(MassShip > (MaxEffectiveThrust * Kh / 1000) / g[i])
+            {
+                status = "Fail";
+            }
+            else
+            {
+                status = "Ok";
+            }
+            str += $"{planet[i]}: {MassShip:#0 000.#} / {(MaxEffectiveThrust * Kh / 1000)/g[i]:#0 000.#} - {status}\n\n";
+        }
+        LCD_1.WriteText(str, false);
+}
