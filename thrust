@@ -9,15 +9,19 @@ public void Save()
 
 public void Main(string argument, UpdateType updateSource)
 {
-
         int countThrust = 0;
         float MaxEffectiveThrust = 0;
         float MassShip;
         float Kh = 101.97F; //kg
         string str;
-        double[] g = new double[6] {0.9, 1, 1.1, 1.2, 2, 4};
-        string[] planet = new string[6] {"Марс", "Земля", "Алиен", "Пертам", "Тохил", "Райк"};
+        string str_lcd2;
+        double[] g = new double[6] { 0.9, 1, 1.1, 1.2, 2, 8 };
+        string[] planet = new string[6] { "Марс", "Земля", "Алиен", "Пертам", "Тохил", "Зел." };
         string status;
+        Base6Directions.Direction Ori;
+
+        int kLs = 10000;
+        double allGas = 0;
 
         //Получаем кокпит
         List<IMyCockpit> Cockpit = new List<IMyCockpit>();
@@ -27,29 +31,117 @@ public void Main(string argument, UpdateType updateSource)
         List<IMyThrust> Thrusters = new List<IMyThrust>();
         GridTerminalSystem.GetBlocksOfType<IMyThrust>(Thrusters);
 
-        IMyTextSurface LCD_1 = GridTerminalSystem.GetBlockWithName("LCD1") as IMyTextSurface;
+        List<IMyGasTank> Gas = new List<IMyGasTank>();
+        GridTerminalSystem.GetBlocksOfType<IMyGasTank>(Gas);
 
-        foreach (IMyThrust Thrust in Thrusters)
+        foreach (IMyGasTank Hy in Gas)
         {
-            if (Thrust.Orientation.Forward == Base6Directions.Direction.Right)
-            {
-                //Echo(Thrust.Orientation.Forward.ToString());
-                //Количество двигателей на подъем
-                countThrust += 1;
-                //Общая мощность в КилоНьютонах
-                MaxEffectiveThrust += Thrust.MaxEffectiveThrust / 1000;
+            allGas += Hy.Capacity * Hy.FilledRatio;
 
-            }
         }
+
+        IMyTextSurface LCD_1 = Cockpit[0].GetSurface(0);
+
+        IMyTextSurface LCD_2 = Cockpit[0].GetSurface(1);
+
+        Ori = Cockpit[0].Orientation.TransformDirection(Base6Directions.Direction.Up);
+
+        switch (Ori.ToString())
+        {
+            case "Up":
+                foreach (IMyThrust Thrust in Thrusters)
+                {
+                    if (Thrust.Orientation.Forward == Base6Directions.Direction.Down)
+                    {
+                        //Количество двигателей на подъем
+                        countThrust += 1;
+                        //Общая мощность в КилоНьютонах
+                        MaxEffectiveThrust += Thrust.MaxEffectiveThrust / 1000;
+
+                    }
+                }
+                break;
+            case "Down":
+                foreach (IMyThrust Thrust in Thrusters)
+                {
+                    if (Thrust.Orientation.Forward == Base6Directions.Direction.Up)
+                    {
+                        //Количество двигателей на подъем
+                        countThrust += 1;
+                        //Общая мощность в КилоНьютонах
+                        MaxEffectiveThrust += Thrust.MaxEffectiveThrust / 1000;
+
+                    }
+                }
+                break;
+            case "Left":
+                foreach (IMyThrust Thrust in Thrusters)
+                {
+                    if (Thrust.Orientation.Forward == Base6Directions.Direction.Right)
+                    {
+                        //Количество двигателей на подъем
+                        countThrust += 1;
+                        //Общая мощность в КилоНьютонах
+                        MaxEffectiveThrust += Thrust.MaxEffectiveThrust / 1000;
+
+                    }
+                }
+                break;
+            case "Right":
+                foreach (IMyThrust Thrust in Thrusters)
+                {
+                    if (Thrust.Orientation.Forward == Base6Directions.Direction.Left)
+                    {
+                        //Количество двигателей на подъем
+                        countThrust += 1;
+                        //Общая мощность в КилоНьютонах
+                        MaxEffectiveThrust += Thrust.MaxEffectiveThrust / 1000;
+
+                    }
+                }
+                break;
+            case "Forward":
+                foreach (IMyThrust Thrust in Thrusters)
+                {
+                    if (Thrust.Orientation.Forward == Base6Directions.Direction.Backward)
+                    {
+                        //Количество двигателей на подъем
+                        countThrust += 1;
+                        //Общая мощность в КилоНьютонах
+                        MaxEffectiveThrust += Thrust.MaxEffectiveThrust / 1000;
+
+                    }
+                }
+                break;
+            case "Backward":
+                foreach (IMyThrust Thrust in Thrusters)
+                {
+                    if (Thrust.Orientation.Forward == Base6Directions.Direction.Forward)
+                    {
+                        //Количество двигателей на подъем
+                        countThrust += 1;
+                        //Общая мощность в КилоНьютонах
+                        MaxEffectiveThrust += Thrust.MaxEffectiveThrust / 1000;
+
+                    }
+                }
+                break;
+        }
+
+
         MassShip = Cockpit[0].CalculateShipMass().PhysicalMass / 1000;
         //Количество двигателей на подъем
-        str = $"Кол. двигателей: {countThrust}\n";
-        //Масса корабля в тоннах
-        str += $"Масса: {(Cockpit[0].CalculateShipMass().PhysicalMass / 1000):#0 000.0#}\n";
+        str_lcd2 = $"Кол. двигателей:\n {countThrust}\n";
 
-        for(int i = 0; i< 6; i++)
+        TimeSpan time = new TimeSpan(0, 0, (int)allGas / (kLs * countThrust));
+        str_lcd2 += $"Время полета:\n  {time}\n";
+
+        //Масса корабля в тоннах
+        str = $"Масса: {(Cockpit[0].CalculateShipMass().PhysicalMass / 1000):#0 000.0#}\n";
+
+        for (int i = 0; i < 6; i++)
         {
-            if(MassShip > (MaxEffectiveThrust * Kh / 1000) / g[i])
+            if (MassShip > (MaxEffectiveThrust * Kh / 1000) / g[i])
             {
                 status = "Fail";
             }
@@ -57,7 +149,9 @@ public void Main(string argument, UpdateType updateSource)
             {
                 status = "Ok";
             }
-            str += $"{planet[i]}: {MassShip:#0 000.#} / {(MaxEffectiveThrust * Kh / 1000)/g[i]:#0 000.#} - {status}\n\n";
+            str += $"{planet[i]}: {MassShip:#0 000.#} / {(MaxEffectiveThrust * Kh / 1000) / g[i]:#0 000.#} - {status} ({g[i]})\n";
         }
         LCD_1.WriteText(str, false);
+
+        LCD_2.WriteText(str_lcd2, false);
 }
