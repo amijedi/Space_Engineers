@@ -1,0 +1,30 @@
+    public Program()
+    {
+      Runtime.UpdateFrequency = UpdateFrequency.Update100;
+    }
+
+    public void Main(string args)
+    {
+        Color colorGreen = new Color(0,255,0);
+        Color colorYellow = new Color(255,255,0);
+
+        IMyShipConnector connector = GridTerminalSystem.GetBlockWithName("ConL") as IMyShipConnector;
+        IMyLightingBlock light = GridTerminalSystem.GetBlockWithName("light") as IMyLightingBlock;
+
+        if(connector.Status == MyShipConnectorStatus.Connectable)
+        {
+            light.ApplyAction("OnOff_On");
+            light.SetValue("Color", colorYellow);
+        }else if(connector.Status == MyShipConnectorStatus.Connected)
+        {
+            light.ApplyAction("OnOff_On");
+            light.SetValue("Color", colorGreen);
+        }
+        else
+        {
+            light.ApplyAction("OnOff_Off");
+        }
+    }
+
+    public void Save()
+    { }
