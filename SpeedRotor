@@ -1,0 +1,55 @@
+    public Program()
+    {
+        Runtime.UpdateFrequency = UpdateFrequency.Update10;
+    }
+
+    public void Main(string args)
+    {
+        float allEnergy = 0;
+        float MaxEnergy = 0;
+        float MaxSpeedRotor = 30;
+        float NewSpeedRotor = 0;
+        float percent = 0;
+        string str;
+
+        IMyTextSurface LCD = GridTerminalSystem.GetBlockWithName("LCD_JUN") as IMyTextSurface;
+
+        IMyBlockGroup group = GridTerminalSystem.GetBlockGroupWithName("Reactors");
+        List<IMyReactor> Energy = new List<IMyReactor>();
+        group.GetBlocksOfType(Energy);
+
+        IMyBlockGroup RP = GridTerminalSystem.GetBlockGroupWithName("RotorPlus");
+        List<IMyMotorStator> RPlus = new List<IMyMotorStator>();
+        RP.GetBlocksOfType(RPlus);
+
+        IMyBlockGroup RM = GridTerminalSystem.GetBlockGroupWithName("RotorMinus");
+        List<IMyMotorStator> RMinus = new List<IMyMotorStator>();
+        RM.GetBlocksOfType(RMinus);
+
+        foreach (IMyReactor E in Energy)
+        {
+            if (E.IsWorking == true)
+            {
+                allEnergy += E.CurrentOutput;
+                MaxEnergy += E.MaxOutput;
+            }
+
+        }
+
+        percent = allEnergy / (MaxEnergy / 100) / 100;
+        NewSpeedRotor = MaxSpeedRotor * percent;
+
+        for (int i = 0; i < 2; i++)
+        {
+            RPlus[i].TargetVelocityRPM  = NewSpeedRotor;
+            RMinus[i].TargetVelocityRPM = -NewSpeedRotor;
+        }
+
+        str = $"Мощность: {percent*100:##}% \n\n Скорость: {NewSpeedRotor:##}";
+
+        LCD.WriteText(str, false);
+
+    }
+
+    public void Save()
+    { }
