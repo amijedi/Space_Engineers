@@ -1,0 +1,35 @@
+        //Выбираем коннектор на корабле по имени
+        IMyShipConnector connector = GridTerminalSystem.GetBlockWithName("ConnectorS") as IMyShipConnector;
+
+        //Все двигатели корабля
+        IMyBlockGroup Thrust = GridTerminalSystem.GetBlockGroupWithName("Трастеры");
+        List<IMyThrust> Thrusts = new List<IMyThrust>();
+        Thrust.GetBlocksOfType(Thrusts);
+
+        //Все батареи корабля
+        IMyBlockGroup Battery = GridTerminalSystem.GetBlockGroupWithName("Battery");
+        List<IMyBatteryBlock> AllBattery = new List<IMyBatteryBlock>();
+        Battery.GetBlocksOfType(AllBattery);
+
+        foreach (IMyBatteryBlock battery in AllBattery)
+        {
+
+            if(connector.Status == MyShipConnectorStatus.Connected)
+            {
+                battery.ChargeMode = ChargeMode.Recharge;
+                foreach(IMyThrust T in Thrusts)
+                {
+                    T.ApplyAction("OnOff_Off");
+                }
+
+            }
+            else
+            {
+                battery.ChargeMode = ChargeMode.Auto;
+                foreach (IMyThrust T in Thrusts)
+                {
+                    T.ApplyAction("OnOff_On");
+                }
+            }
+
+        }
