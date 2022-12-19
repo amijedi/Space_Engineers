@@ -1,0 +1,40 @@
+        float charge = 0;
+        float CurrentStoredPower = 0;
+        float MaxStoredPower = 0;
+
+        //Выбираем водородные генераторы(те, что двигатели)
+        IMyBlockGroup Gas = GridTerminalSystem.GetBlockGroupWithName("Двигатели");
+        List<IMyGasGenerator> Engine = new List<IMyGasGenerator>();
+        Gas.GetBlocksOfType(Engine);
+
+        //Выбираем батареи
+        IMyBlockGroup Battery = GridTerminalSystem.GetBlockGroupWithName("Батарея");
+        List<IMyBatteryBlock> AllBattery = new List<IMyBatteryBlock>();
+        Battery.GetBlocksOfType(AllBattery);
+
+        foreach (IMyBatteryBlock battery in AllBattery)
+        {
+            CurrentStoredPower += battery.CurrentStoredPower;
+            MaxStoredPower += battery.MaxStoredPower;
+
+            Echo(charge.ToString());
+
+        }
+        
+        //Формула подсчета
+        charge = (AllBattery.Count * CurrentStoredPower) / (AllBattery.Count * MaxStoredPower) * 100;
+
+        foreach (IMyGasGenerator E in Engine)
+        {
+            if(charge < 80)
+            {
+                E.ApplyAction("OnOff_On");
+            }
+            else
+            {
+                E.ApplyAction("OnOff_Off");
+            }
+        }
+
+        //Вывод инфы в ПБ
+        Echo(charge.ToString());
