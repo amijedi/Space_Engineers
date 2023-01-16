@@ -1,0 +1,55 @@
+
+        double angle = 0;
+        float SpeedRotor = 0.285f;
+        float SpeedPiston = 0.012f;
+
+
+        IMyBlockGroup pistons = GridTerminalSystem.GetBlockGroupWithName("pistons");
+        List<IMyPistonBase> piston = new List<IMyPistonBase>();
+        pistons.GetBlocksOfType(piston);
+
+        IMyMotorStator rotor = GridTerminalSystem.GetBlockWithName("Rotor") as IMyMotorStator;
+        IMyLightingBlock light = GridTerminalSystem.GetBlockWithName("light") as IMyLightingBlock;
+
+        Echo(Math.Round((rotor.Angle * 180 / 3.14)).ToString());
+
+        angle = Math.Round(rotor.Angle * 180 / 3.14);
+
+        if (light.IsWorking == false)
+        {
+            if (angle == 270)
+            {
+
+                rotor.RotorLock = true;
+                rotor.TargetVelocityRPM = 0;
+                foreach (IMyPistonBase p in piston)
+                {
+                    p.ApplyAction("OnOff_On");
+                    p.Velocity = -0.5f;
+
+                }
+
+            }
+            else
+            {
+
+                rotor.RotorLock = false;
+                rotor.TargetVelocityRPM = 0.7f;
+                foreach (IMyPistonBase p in piston)
+                {
+                    p.ApplyAction("OnOff_Off");
+                }
+
+            }
+        }
+        else if(light.IsWorking == true)
+        {
+            rotor.RotorLock = false;
+            rotor.TargetVelocityRPM = SpeedRotor;
+            foreach (IMyPistonBase p in piston)
+            {
+                p.ApplyAction("OnOff_On");
+                p.Velocity = SpeedPiston;
+            }
+
+        }
